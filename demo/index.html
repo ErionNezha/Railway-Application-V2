@@ -1,0 +1,125 @@
+<!-- Created by Erion Nezha — © 2026 All rights reserved -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚂 Railway Application — Web Port</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b0f14;color:#e6e6e6;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+header.top{background:linear-gradient(135deg,#101820,#1b2a3a);padding:18px 20px;text-align:center;border-bottom:2px solid #00d4ff33}
+header.top h1{font-size:1.25rem;color:#fff}
+header.top p{color:#9fb3c8;font-size:.82rem;margin-top:6px}
+.wrap{flex:1;max-width:1000px;width:100%;margin:0 auto;padding:18px}
+.card{background:#0d1420;border:1px solid #ffffff14;border-radius:10px;padding:18px;margin-bottom:14px}
+.card h2{color:#7fdbff;font-size:1.05rem;margin-bottom:12px}
+input,select,button{font-family:inherit;font-size:.92rem;padding:9px 12px;border-radius:7px;border:1px solid #ffffff22;background:#131c2a;color:#fff;margin:4px 4px 4px 0}
+button{background:#00d4ff;color:#04121a;border:none;font-weight:600;cursor:pointer}
+button:hover{filter:brightness(1.12)}
+button.ghost{background:transparent;border:1px solid #00d4ff66;color:#7fdbff}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.88rem}
+th,td{border:1px solid #ffffff18;padding:8px 10px;text-align:left}
+th{background:#131c2a;color:#7fdbff}
+tr:nth-child(even){background:#ffffff06}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.msg{background:#00d4ff14;border:1px solid #00d4ff44;border-radius:8px;padding:10px 14px;margin:10px 0;font-size:.9rem;color:#bfe9ff}
+footer{text-align:center;padding:14px;color:#5c6b7f;font-size:.85rem;border-top:1px solid #ffffff10}
+footer strong{color:#9fb3c8}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header class="top"><h1>🚂 Railway Application</h1><p>Web port of the Java Swing railway app — passenger booking and admin panel with PNR.</p></header>
+<div class="wrap">
+
+<div class="card" id="loginCard">
+<h2>🚂 Railway Application — Admin Login</h2>
+<input id="u" placeholder="Username"> <input id="p" type="password" placeholder="Password">
+<button onclick="adminLogin()">Login</button>
+<button class="ghost" onclick="userMode()">Book as Passenger</button>
+<div class="msg hidden" id="loginMsg"></div>
+<p style="font-size:.8rem;color:#5c6b7f;margin-top:8px">Admin demo: admin / admin</p>
+</div>
+<div id="userApp" class="hidden">
+<div class="card">
+<h2>🎫 Book a Ticket</h2>
+<input id="pn" placeholder="Passenger name">
+<select id="tr"></select>
+<select id="cl"><option>Sleeper</option><option>AC 3-Tier</option><option>AC 2-Tier</option><option>First Class</option></select>
+<input id="st" type="number" min="1" max="6" value="1" style="width:80px">
+<button onclick="book()">Book Ticket</button>
+<div class="msg hidden" id="bookMsg"></div>
+</div>
+<div class="card">
+<h2>🚆 Available Trains</h2>
+<table id="trainTbl"><tr><th>No</th><th>Train</th><th>From</th><th>To</th><th>Departure</th></tr></table>
+</div>
+</div>
+<div id="adminApp" class="hidden">
+<div class="nav">
+<button onclick="showB()">📋 See All Bookings</button>
+<button onclick="showM()">➕ Add Railway Manager</button>
+<button class="ghost" onclick="doLogout()">Log Out</button>
+</div>
+<div class="card" id="bCard">
+<h2>All Bookings</h2>
+<table id="bookTbl"><tr><th>PNR</th><th>Passenger</th><th>Train</th><th>Class</th><th>Seats</th><th>Date</th></tr></table>
+</div>
+<div class="card hidden" id="mCard">
+<h2>Add Railway Manager</h2>
+<input id="mn" placeholder="Name"> <input id="mu" placeholder="Username"> <input id="mp" placeholder="Password">
+<button onclick="addMgr()">Add Manager</button>
+<table id="mgrTbl"><tr><th>Name</th><th>Username</th></tr></table>
+</div>
+</div>
+
+</div>
+<footer>Krijuar nga <strong>Erion Nezha</strong> — © 2026</footer>
+<script>
+var TRAINS=[
+ {no:'12001',n:'Shatabdi Express',from:'New Delhi',to:'Bhopal',dep:'06:00'},
+ {no:'12622',n:'Tamil Nadu Express',from:'Chennai',to:'New Delhi',dep:'22:00'},
+ {no:'12951',n:'Mumbai Rajdhani',from:'Mumbai',to:'New Delhi',dep:'17:00'},
+ {no:'12302',n:'Howrah Rajdhani',from:'Kolkata',to:'New Delhi',dep:'16:55'}];
+var bookings=[],managers=[],pnr=100000;
+function msg(id,t){var e=document.getElementById(id);e.textContent=t;e.classList.remove('hidden');}
+TRAINS.forEach(function(t){var tr=document.createElement('tr');
+ [t.no,t.n,t.from,t.to,t.dep].forEach(function(x){var td=document.createElement('td');td.textContent=x;tr.appendChild(td);});
+ document.getElementById('trainTbl').appendChild(tr);
+ var o=document.createElement('option');o.value=t.no;o.textContent=t.no+' — '+t.n+' ('+t.from+' → '+t.to+')';
+ document.getElementById('tr').appendChild(o);});
+function adminLogin(){var u=document.getElementById('u').value,p=document.getElementById('p').value;
+ if(u==='admin'&&p==='admin'){document.getElementById('loginCard').classList.add('hidden');
+  document.getElementById('adminApp').classList.remove('hidden');renderBookings();}
+ else msg('loginMsg','Wrong Username Or Password....!!');}
+function userMode(){document.getElementById('loginCard').classList.add('hidden');
+ document.getElementById('userApp').classList.remove('hidden');}
+function doLogout(){if(!confirm('Are you sure?'))return;
+ document.getElementById('adminApp').classList.add('hidden');
+ document.getElementById('loginCard').classList.remove('hidden');}
+function showB(){document.getElementById('mCard').classList.add('hidden');document.getElementById('bCard').classList.remove('hidden');}
+function showM(){document.getElementById('bCard').classList.add('hidden');document.getElementById('mCard').classList.remove('hidden');}
+function book(){var n=document.getElementById('pn').value;
+ if(!n){msg('bookMsg','Enter passenger name.');return;}
+ pnr++;var t=TRAINS.find(function(x){return x.no===document.getElementById('tr').value;});
+ var b={pnr:'PNR'+pnr,n:n,t:t.no+' '+t.n,cl:document.getElementById('cl').value,
+        st:document.getElementById('st').value,d:new Date().toLocaleDateString()};
+ bookings.push(b);
+ msg('bookMsg','Ticket booked! PNR: '+b.pnr+' | '+t.n+' | '+b.cl+' x'+b.st);}
+function renderBookings(){
+ var tb=document.getElementById('bookTbl');
+ bookings.forEach(function(b){var tr=document.createElement('tr');
+  [b.pnr,b.n,b.t,b.cl,b.st,b.d].forEach(function(x){var td=document.createElement('td');td.textContent=x;tr.appendChild(td);});
+  tb.appendChild(tr);});
+ if(!bookings.length){var tr=document.createElement('tr');var td=document.createElement('td');
+  td.colSpan=6;td.textContent='No bookings yet.';tr.appendChild(td);tb.appendChild(tr);}
+}
+function addMgr(){var n=document.getElementById('mn').value,u=document.getElementById('mu').value;
+ if(!n||!u)return;managers.push({n:n,u:u});
+ var tr=document.createElement('tr');
+ [n,u].forEach(function(x){var td=document.createElement('td');td.textContent=x;tr.appendChild(td);});
+ document.getElementById('mgrTbl').appendChild(tr);}
+</script>
+</body>
+</html>
